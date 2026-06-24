@@ -2,6 +2,7 @@
 #include "student_ops.h"
 #include "course_ops.h"
 #include "attendance_ops.h"
+#include "grades_ops.h"
 
 using namespace std;
 
@@ -12,11 +13,12 @@ void displayMainMenu() {
     cout << "1. Student Management" << endl;
     cout << "2. Course Management" << endl;
     cout << "3. Attendance Management" << endl;
-    cout << "4. Reports & Analytics" << endl;
-    cout << "5. Enrollment Management" << endl;
-    cout << "6. Exit Application" << endl;
+    cout << "4. Grades Management" << endl;
+    cout << "5. Reports & Analytics" << endl;
+    cout << "6. Enrollment Management" << endl;
+    cout << "7. Exit Application" << endl;
     cout << "----------------------------------------" << endl;
-    cout << "Select an option (1-6): ";
+    cout << "Select an option (1-7): ";
 }
 
 void displayStudentMenu() {
@@ -76,6 +78,15 @@ void displayAttendanceMenu() {
     cout << "2. View Attendance Report" << endl;
     cout << "3. Back to Main Menu" << endl;
     cout << "------------------------------------------" << endl;
+    cout << "Select an option (1-3): ";
+}
+
+void displayGradesMenu() {
+    cout << "\n====== Grades Management Menu ======" << endl;
+    cout << "1. Enter Student Marks" << endl;
+    cout << "2. Compute Course Class Stats" << endl;
+    cout << "3. Back to Main Menu" << endl;
+    cout << "------------------------------------" << endl;
     cout << "Select an option (1-3): ";
 }
 
@@ -247,6 +258,34 @@ void handleAttendanceManagement(AttendanceRecord attendance[], int& attendanceCo
     }
 }
 
+void handleGradesManagement(GradeRecord grades[], int& gradeCount, Student students[], int& studentCount, Course courses[], int& courseCount) {
+    int choice;
+
+    while (true) {
+        displayGradesMenu();
+        cin >> choice;
+        cin.ignore();
+
+        switch (choice) {
+            case 1:
+                enterMarks(grades, gradeCount, students, studentCount, courses, courseCount);
+                break;
+            case 2: {
+                string courseCode;
+                cout << "Enter Course Code: ";
+                getline(cin, courseCode);
+                computeClassStats(grades, gradeCount, courseCode);
+                break;
+            }
+            case 3:
+                cout << "Returning to Main Menu..." << endl;
+                return;
+            default:
+                cout << "Invalid option. Please try again." << endl;
+        }
+    }
+}
+
 int main() {
     const int MAX_RECORDS = 100;
     Student students[MAX_RECORDS];
@@ -257,6 +296,9 @@ int main() {
 
     AttendanceRecord attendance[MAX_RECORDS];
     int attendanceCount = 0;
+
+    GradeRecord grades[MAX_RECORDS];
+    int gradeCount = 0;
     
     Course mockCourse1;
     mockCourse1.courseCode = "CS-101";
@@ -302,17 +344,20 @@ int main() {
                 handleAttendanceManagement(attendance, attendanceCount, students, studentCount, courses, courseCount);
                 break;
             case 4:
-                handleReportsMenu(students, studentCount);
+                handleGradesManagement(grades, gradeCount, students, studentCount, courses, courseCount);
                 break;
             case 5:
-                handleEnrollmentManagement(students, studentCount);
+                handleReportsMenu(students, studentCount);
                 break;
             case 6:
+                handleEnrollmentManagement(students, studentCount);
+                break;
+            case 7:
                 cout << "\nThank you for using Campus Analytics Engine!" << endl;
                 cout << "Exiting application..." << endl;
                 return 0;
             default:
-                cout << "Invalid option. Please select 1-6." << endl;
+                cout << "Invalid option. Please select 1-7." << endl;
         }
     }
     
