@@ -3,6 +3,7 @@
 #include "course_ops.h"
 #include "attendance_ops.h"
 #include "grades_ops.h"
+#include "fee_ops.h"
 
 using namespace std;
 
@@ -14,11 +15,12 @@ void displayMainMenu() {
     cout << "2. Course Management" << endl;
     cout << "3. Attendance Management" << endl;
     cout << "4. Grades Management" << endl;
-    cout << "5. Reports & Analytics" << endl;
-    cout << "6. Enrollment Management" << endl;
-    cout << "7. Exit Application" << endl;
+    cout << "5. Fee Tracking Management" << endl;
+    cout << "6. Reports & Analytics" << endl;
+    cout << "7. Enrollment Management" << endl;
+    cout << "8. Exit Application" << endl;
     cout << "----------------------------------------" << endl;
-    cout << "Select an option (1-7): ";
+    cout << "Select an option (1-8): ";
 }
 
 void displayStudentMenu() {
@@ -88,6 +90,17 @@ void displayGradesMenu() {
     cout << "3. Back to Main Menu" << endl;
     cout << "------------------------------------" << endl;
     cout << "Select an option (1-3): ";
+}
+
+void displayFeeMenu() {
+    cout << "\n====== Fee Tracking Management Menu ======" << endl;
+    cout << "1. Add Fee Record" << endl;
+    cout << "2. Record Payment" << endl;
+    cout << "3. Generate Receipt" << endl;
+    cout << "4. View Defaulters" << endl;
+    cout << "5. Back to Main Menu" << endl;
+    cout << "------------------------------------------" << endl;
+    cout << "Select an option (1-5): ";
 }
 
 void handleSearchStudent(Student students[], int& studentCount) {
@@ -286,6 +299,133 @@ void handleGradesManagement(GradeRecord grades[], int& gradeCount, Student stude
     }
 }
 
+void handleFeeManagement(FeeRecord fees[], int& feeCount, Student students[], int& studentCount) {
+    int choice;
+
+    while (true) {
+        displayFeeMenu();
+        cin >> choice;
+        cin.ignore();
+
+        switch (choice) {
+            case 1: {
+                if (feeCount >= MAX_RECORDS) {
+                    cout << "Fee storage is full. Cannot add more records." << endl;
+                    break;
+                }
+
+                FeeRecord rec;
+                cout << "Enter Student Roll Number: ";
+                getline(cin, rec.rollNumber);
+
+                bool studentExists = false;
+                for (int i = 0; i < studentCount; i++) {
+                    if (students[i].roll == rec.rollNumber && students[i].status == "active") {
+                        studentExists = true;
+                        break;
+                    }
+                }
+
+                if (!studentExists) {
+                    cout << "Active student not found." << endl;
+                    break;
+                }
+
+                cout << "Enter Semester (e.g., Fall2024): ";
+                getline(cin, rec.semester);
+
+                bool duplicate = false;
+                for (int i = 0; i < feeCount; i++) {
+                    if (fees[i].rollNumber == rec.rollNumber && fees[i].semester == rec.semester) {
+                        duplicate = true;
+                        break;
+                    }
+                }
+
+                if (duplicate) {
+                    cout << "Fee record already exists for this student and semester." << endl;
+                    break;
+                }
+
+                cout << "Enter Amount Due: ";
+                cin >> rec.amountDue;
+                cin.ignore();
+                if (rec.amountDue <= 0.0) {
+                    cout << "Invalid amount due." << endl;
+                    break;
+                }
+
+                rec.amountPaid = 0.0;
+
+                cout << "Enter Due Date (DD-MM-YYYY): ";
+                getline(cin, rec.dueDate);
+                if (rec.dueDate.length() != 10 || rec.dueDate[2] != '-' || rec.dueDate[5] != '-') {
+                    cout << "Invalid due date format." << endl;
+                    break;
+                }
+
+                rec.paidDate = "NOT_PAID";
+                fees[feeCount] = rec;
+                feeCount++;
+
+                cout << "Fee record added successfully." << endl;
+                break;
+            }
+            case 2: {
+                string rollNumber;
+                string semester;
+                string paymentDate;
+                double paymentAmount;
+
+                cout << "Enter Student Roll Number: ";
+                getline(cin, rollNumber);
+                cout << "Enter Semester: ";
+                getline(cin, semester);
+                cout << "Enter Payment Amount: ";
+                cin >> paymentAmount;
+                cin.ignore();
+                cout << "Enter Payment Date (DD-MM-YYYY): ";
+                getline(cin, paymentDate);
+
+                recordPayment(fees, feeCount, rollNumber, semester, paymentAmount, paymentDate);
+                break;
+            }
+            case 3: {
+                string rollNumber;
+                string semester;
+                cout << "Enter Student Roll Number: ";
+                getline(cin, rollNumber);
+                cout << "Enter Semester: ";
+                getline(cin, semester);
+
+                int idx = -1;
+                for (int i = 0; i < feeCount; i++) {
+                    if (fees[i].rollNumber == rollNumber && fees[i].semester == semester) {
+                        idx = i;
+                        break;
+                    }
+                }
+
+                if (idx == -1) {
+                    cout << "Fee record not found." << endl;
+                    break;
+                }
+
+                generateReceipt(fees[idx]);
+                break;
+            }
+            case 4:
+                getDefaulters(fees, feeCount, students, studentCount);
+                break;
+            case 5:
+                cout << "Returning to Main Menu..." << endl;
+                return;
+            default:
+                cout << "Invalid option. Please try again." << endl;
+        }
+    }
+}
+
 int main() {
     const int MAX_RECORDS = 100;
     Student students[MAX_RECORDS];
@@ -299,6 +439,9 @@ int main() {
 
     GradeRecord grades[MAX_RECORDS];
     int gradeCount = 0;
+
+    FeeRecord fees[MAX_RECORDS];
+    int feeCount = 0;
     
     Course mockCourse1;
     mockCourse1.courseCode = "CS-101";
@@ -347,17 +490,20 @@ int main() {
                 handleGradesManagement(grades, gradeCount, students, studentCount, courses, courseCount);
                 break;
             case 5:
-                handleReportsMenu(students, studentCount);
+                handleFeeManagement(fees, feeCount, students, studentCount);
                 break;
             case 6:
-                handleEnrollmentManagement(students, studentCount);
+                handleReportsMenu(students, studentCount);
                 break;
             case 7:
+                handleEnrollmentManagement(students, studentCount);
+                break;
+            case 8:
                 cout << "\nThank you for using Campus Analytics Engine!" << endl;
                 cout << "Exiting application..." << endl;
                 return 0;
             default:
-                cout << "Invalid option. Please select 1-7." << endl;
+                cout << "Invalid option. Please select 1-8." << endl;
         }
     }
     
