@@ -26,8 +26,8 @@ bool isValidDate(const string& date) {
     return true;
 }
 
-bool courseExists(const vector<Course>& courses, const string& courseCode) {
-    for (int i = 0; i < courses.size(); i++) {
+bool courseExists(Course courses[], int& courseCount, const string& courseCode) {
+    for (int i = 0; i < courseCount; i++) {
         if (courses[i].courseCode == courseCode) {
             return true;
         }
@@ -35,7 +35,7 @@ bool courseExists(const vector<Course>& courses, const string& courseCode) {
     return false;
 }
 
-void markAttendance(vector<AttendanceRecord>& attendance, const vector<Student>& students, const vector<Course>& courses) {
+void markAttendance(AttendanceRecord attendance[], int& attendanceCount, Student students[], int& studentCount, Course courses[], int& courseCount) {
     string courseCode, date;
     
     cout << "\n=== Mark Attendance ===" << endl;
@@ -43,7 +43,7 @@ void markAttendance(vector<AttendanceRecord>& attendance, const vector<Student>&
     cout << "Enter Course Code: ";
     getline(cin, courseCode);
     
-    if (!courseExists(courses, courseCode)) {
+    if (!courseExists(courses, courseCount, courseCode)) {
         cout << "Course not found!" << endl;
         return;
     }
@@ -59,8 +59,13 @@ void markAttendance(vector<AttendanceRecord>& attendance, const vector<Student>&
     cout << "\n--- Marking Attendance for Course " << courseCode << " on " << date << " ---" << endl;
     cout << endl;
     
-    for (int i = 0; i < students.size(); i++) {
+    for (int i = 0; i < studentCount; i++) {
         if (students[i].status == "active") {
+            if (attendanceCount >= MAX_ATTENDANCE_RECORDS) {
+                cout << "Attendance storage is full. Remaining students were not recorded." << endl;
+                break;
+            }
+
             cout << "Roll: " << students[i].roll << " | Name: " << students[i].name << endl;
             cout << "Status (P=Present, A=Absent, L=Leave): ";
             
@@ -85,7 +90,8 @@ void markAttendance(vector<AttendanceRecord>& attendance, const vector<Student>&
             record.date = date;
             record.status = attendanceStatus;
             
-            attendance.push_back(record);
+            attendance[attendanceCount] = record;
+            attendanceCount++;
             cout << endl;
         }
     }
@@ -93,22 +99,21 @@ void markAttendance(vector<AttendanceRecord>& attendance, const vector<Student>&
     cout << "Attendance marked successfully for " << courseCode << "!" << endl;
 }
 
-void viewAttendanceReport(const vector<AttendanceRecord>& attendance) {
+void viewAttendanceReport(AttendanceRecord attendance[], int& attendanceCount) {
     string courseCode;
     
     cout << "\n=== View Attendance Report ===" << endl;
     cout << "Enter Course Code: ";
     getline(cin, courseCode);
-    
-    vector<AttendanceRecord> courseAttendance;
-    
-    for (int i = 0; i < attendance.size(); i++) {
+
+    int courseAttendanceCount = 0;
+    for (int i = 0; i < attendanceCount; i++) {
         if (attendance[i].courseCode == courseCode) {
-            courseAttendance.push_back(attendance[i]);
+            courseAttendanceCount++;
         }
     }
-    
-    if (courseAttendance.size() == 0) {
+
+    if (courseAttendanceCount == 0) {
         cout << "\nNo attendance records found for course " << courseCode << "." << endl;
         return;
     }
@@ -117,13 +122,15 @@ void viewAttendanceReport(const vector<AttendanceRecord>& attendance) {
     cout << "-----------------------------------------------------------" << endl;
     cout << "Roll Number   | Date       | Status" << endl;
     cout << "-----------------------------------------------------------" << endl;
-    
-    for (int i = 0; i < courseAttendance.size(); i++) {
-        cout.width(13);
-        cout << left << courseAttendance[i].rollNumber << "| ";
-        cout.width(10);
-        cout << left << courseAttendance[i].date << "| ";
-        cout << courseAttendance[i].status << endl;
+
+    for (int i = 0; i < attendanceCount; i++) {
+        if (attendance[i].courseCode == courseCode) {
+            cout.width(13);
+            cout << left << attendance[i].rollNumber << "| ";
+            cout.width(10);
+            cout << left << attendance[i].date << "| ";
+            cout << attendance[i].status << endl;
+        }
     }
     
     cout << "-----------------------------------------------------------" << endl;

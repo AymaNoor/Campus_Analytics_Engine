@@ -2,9 +2,10 @@
 #define ATTENDANCE_OPS_H
 
 #include <string>
-#include <vector>
 #include "student_ops.h"
 #include "course_ops.h"
+
+const int MAX_ATTENDANCE_RECORDS = 100;
 
 struct AttendanceRecord {
     std::string rollNumber;
@@ -13,9 +14,9 @@ struct AttendanceRecord {
     std::string status;
 };
 
-void markAttendance(std::vector<AttendanceRecord>& attendance, const std::vector<Student>& students, const std::vector<Course>& courses);
-void viewAttendanceReport(const std::vector<AttendanceRecord>& attendance);
-bool courseExists(const std::vector<Course>& courses, const std::string& courseCode);
+void markAttendance(AttendanceRecord attendance[], int& attendanceCount, Student students[], int& studentCount, Course courses[], int& courseCount);
+void viewAttendanceReport(AttendanceRecord attendance[], int& attendanceCount);
+bool courseExists(Course courses[], int& courseCount, const std::string& courseCode);
 bool isValidDate(const std::string& date);
 
 #endif

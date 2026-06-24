@@ -32,8 +32,8 @@ bool isValidCGPA(double cgpa) {
     return cgpa >= 0.0 && cgpa <= 4.0;
 }
 
-bool rollExists(const vector<Student>& students, const string& roll) {
-    for (int i = 0; i < students.size(); i++) {
+bool rollExists(Student students[], int& studentCount, const string& roll) {
+    for (int i = 0; i < studentCount; i++) {
         if (students[i].roll == roll && students[i].status == "active") {
             return true;
         }
@@ -41,10 +41,15 @@ bool rollExists(const vector<Student>& students, const string& roll) {
     return false;
 }
 
-void addStudent(vector<Student>& students) {
+void addStudent(Student students[], int& studentCount) {
     Student newStudent;
     
     cout << "\n=== Add New Student ===" << endl;
+
+    if (studentCount >= MAX_STUDENT_RECORDS) {
+        cout << "Student storage is full. Cannot add more records." << endl;
+        return;
+    }
     
     cout << "Enter Roll Number (Format: BSAI-YY-XXX): ";
     getline(cin, newStudent.roll);
@@ -54,7 +59,7 @@ void addStudent(vector<Student>& students) {
         return;
     }
     
-    if (rollExists(students, newStudent.roll)) {
+    if (rollExists(students, studentCount, newStudent.roll)) {
         cout << "Roll number already exists!" << endl;
         return;
     }
@@ -80,12 +85,13 @@ void addStudent(vector<Student>& students) {
     }
     
     newStudent.status = "active";
-    students.push_back(newStudent);
+    students[studentCount] = newStudent;
+    studentCount++;
     
     cout << "Student added successfully!" << endl;
 }
 
-void searchByRoll(const vector<Student>& students) {
+void searchByRoll(Student students[], int& studentCount) {
     string roll;
     
     cout << "\n=== Search by Roll Number ===" << endl;
@@ -93,7 +99,7 @@ void searchByRoll(const vector<Student>& students) {
     getline(cin, roll);
     
     bool found = false;
-    for (int i = 0; i < students.size(); i++) {
+    for (int i = 0; i < studentCount; i++) {
         if (students[i].roll == roll && students[i].status == "active") {
             cout << "\nStudent Found:" << endl;
             cout << "Roll: " << students[i].roll << endl;
@@ -111,37 +117,37 @@ void searchByRoll(const vector<Student>& students) {
     }
 }
 
-void searchByName(const vector<Student>& students) {
+void searchByName(Student students[], int& studentCount) {
     string searchName;
     
     cout << "\n=== Search by Name ===" << endl;
     cout << "Enter Name (or part of name): ";
     getline(cin, searchName);
-    
-    vector<Student> results;
-    for (int i = 0; i < students.size(); i++) {
-        if (students[i].status == "active") {
-            string fullName = students[i].name;
-            string::size_type pos = fullName.find(searchName);
-            if (pos != string::npos) {
-                results.push_back(students[i]);
-            }
+
+    int resultCount = 0;
+    for (int i = 0; i < studentCount; i++) {
+        if (students[i].status == "active" && students[i].name.find(searchName) != string::npos) {
+            resultCount++;
         }
     }
-    
-    if (results.size() == 0) {
+
+    if (resultCount == 0) {
         cout << "No students found matching the name." << endl;
         return;
     }
     
     cout << "\nStudents Found:" << endl;
-    for (int i = 0; i < results.size(); i++) {
-        cout << "\n" << (i + 1) << ". Roll: " << results[i].roll << " | Name: " << results[i].name 
-             << " | Dept: " << results[i].dept << " | CGPA: " << results[i].cgpa << endl;
+    int serial = 1;
+    for (int i = 0; i < studentCount; i++) {
+        if (students[i].status == "active" && students[i].name.find(searchName) != string::npos) {
+            cout << "\n" << serial << ". Roll: " << students[i].roll << " | Name: " << students[i].name
+                 << " | Dept: " << students[i].dept << " | CGPA: " << students[i].cgpa << endl;
+            serial++;
+        }
     }
 }
 
-void updateStudent(vector<Student>& students) {
+void updateStudent(Student students[], int& studentCount) {
     string roll;
     
     cout << "\n=== Update Student ===" << endl;
@@ -149,7 +155,7 @@ void updateStudent(vector<Student>& students) {
     getline(cin, roll);
     
     int index = -1;
-    for (int i = 0; i < students.size(); i++) {
+    for (int i = 0; i < studentCount; i++) {
         if (students[i].roll == roll && students[i].status == "active") {
             index = i;
             break;
@@ -199,7 +205,7 @@ void updateStudent(vector<Student>& students) {
     cout << "Student updated successfully!" << endl;
 }
 
-void softDelete(vector<Student>& students) {
+void softDelete(Student students[], int& studentCount) {
     string roll;
     
     cout << "\n=== Delete Student (Soft Delete) ===" << endl;
@@ -207,7 +213,7 @@ void softDelete(vector<Student>& students) {
     getline(cin, roll);
     
     int index = -1;
-    for (int i = 0; i < students.size(); i++) {
+    for (int i = 0; i < studentCount; i++) {
         if (students[i].roll == roll && students[i].status == "active") {
             index = i;
             break;
@@ -223,10 +229,10 @@ void softDelete(vector<Student>& students) {
     cout << "Student marked as inactive (soft deleted)." << endl;
 }
 
-void selectionSort(vector<Student>& students) {
-    for (int i = 0; i < students.size() - 1; i++) {
+void selectionSort(Student students[], int count) {
+    for (int i = 0; i < count - 1; i++) {
         int minIdx = i;
-        for (int j = i + 1; j < students.size(); j++) {
+        for (int j = i + 1; j < count; j++) {
             if (students[j].roll < students[minIdx].roll) {
                 minIdx = j;
             }
@@ -238,29 +244,31 @@ void selectionSort(vector<Student>& students) {
     }
 }
 
-void listActiveStudents(vector<Student>& students) {
-    vector<Student> activeStudents;
+void listActiveStudents(Student students[], int& studentCount) {
+    Student activeStudents[MAX_STUDENT_RECORDS];
+    int activeCount = 0;
     
-    for (int i = 0; i < students.size(); i++) {
+    for (int i = 0; i < studentCount; i++) {
         if (students[i].status == "active") {
-            activeStudents.push_back(students[i]);
+            activeStudents[activeCount] = students[i];
+            activeCount++;
         }
     }
     
-    if (activeStudents.size() == 0) {
+    if (activeCount == 0) {
         cout << "\n=== Active Students List ===" << endl;
         cout << "No active students found." << endl;
         return;
     }
     
-    selectionSort(activeStudents);
+    selectionSort(activeStudents, activeCount);
     
     cout << "\n=== Active Students List (Sorted by Roll Number) ===" << endl;
     cout << "-----------------------------------------------------------" << endl;
     cout << "Roll          | Name            | Dept       | CGPA    " << endl;
     cout << "-----------------------------------------------------------" << endl;
     
-    for (int i = 0; i < activeStudents.size(); i++) {
+    for (int i = 0; i < activeCount; i++) {
         cout.width(13);
         cout << left << activeStudents[i].roll << "| ";
         cout.width(15);

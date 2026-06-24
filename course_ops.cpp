@@ -35,8 +35,8 @@ bool isValidCreditHours(int hours) {
     return hours >= 1 && hours <= 4;
 }
 
-bool courseCodeExists(const vector<Course>& courses, const string& code) {
-    for (int i = 0; i < courses.size(); i++) {
+bool courseCodeExists(Course courses[], int& courseCount, const string& code) {
+    for (int i = 0; i < courseCount; i++) {
         if (courses[i].courseCode == code) {
             return true;
         }
@@ -44,10 +44,15 @@ bool courseCodeExists(const vector<Course>& courses, const string& code) {
     return false;
 }
 
-void addCourse(vector<Course>& courses) {
+void addCourse(Course courses[], int& courseCount) {
     Course newCourse;
     
     cout << "\n=== Add New Course ===" << endl;
+
+    if (courseCount >= MAX_COURSE_RECORDS) {
+        cout << "Course storage is full. Cannot add more records." << endl;
+        return;
+    }
     
     cout << "Enter Course Code (Format: XX-XXX or XXX-XXX, e.g., CS-101): ";
     getline(cin, newCourse.courseCode);
@@ -57,7 +62,7 @@ void addCourse(vector<Course>& courses) {
         return;
     }
     
-    if (courseCodeExists(courses, newCourse.courseCode)) {
+    if (courseCodeExists(courses, courseCount, newCourse.courseCode)) {
         cout << "Course code already exists!" << endl;
         return;
     }
@@ -84,13 +89,14 @@ void addCourse(vector<Course>& courses) {
     }
     
     newCourse.currentEnrollment = 0;
-    courses.push_back(newCourse);
+    courses[courseCount] = newCourse;
+    courseCount++;
     
     cout << "Course added successfully!" << endl;
 }
 
-void listCourses(const vector<Course>& courses) {
-    if (courses.size() == 0) {
+void listCourses(Course courses[], int& courseCount) {
+    if (courseCount == 0) {
         cout << "\n=== Registered Courses ===" << endl;
         cout << "No courses registered yet." << endl;
         return;
@@ -101,7 +107,7 @@ void listCourses(const vector<Course>& courses) {
     cout << "Code      | Title               | Credits | Capacity | Enrolled | Available" << endl;
     cout << "----------------------------------------------------------------------" << endl;
     
-    for (int i = 0; i < courses.size(); i++) {
+    for (int i = 0; i < courseCount; i++) {
         int availableSeats = courses[i].maxCapacity - courses[i].currentEnrollment;
         
         cout.width(9);
@@ -120,7 +126,7 @@ void listCourses(const vector<Course>& courses) {
     cout << "----------------------------------------------------------------------" << endl;
 }
 
-void updateCourse(vector<Course>& courses) {
+void updateCourse(Course courses[], int& courseCount) {
     string code;
     
     cout << "\n=== Update Course ===" << endl;
@@ -128,7 +134,7 @@ void updateCourse(vector<Course>& courses) {
     getline(cin, code);
     
     int index = -1;
-    for (int i = 0; i < courses.size(); i++) {
+    for (int i = 0; i < courseCount; i++) {
         if (courses[i].courseCode == code) {
             index = i;
             break;

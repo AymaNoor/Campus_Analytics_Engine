@@ -1,7 +1,7 @@
 #include <iostream>
-#include <vector>
 #include "student_ops.h"
 #include "course_ops.h"
+#include "attendance_ops.h"
 
 using namespace std;
 
@@ -11,11 +11,12 @@ void displayMainMenu() {
     cout << "========================================" << endl;
     cout << "1. Student Management" << endl;
     cout << "2. Course Management" << endl;
-    cout << "3. Reports & Analytics" << endl;
-    cout << "4. Enrollment Management" << endl;
-    cout << "5. Exit Application" << endl;
+    cout << "3. Attendance Management" << endl;
+    cout << "4. Reports & Analytics" << endl;
+    cout << "5. Enrollment Management" << endl;
+    cout << "6. Exit Application" << endl;
     cout << "----------------------------------------" << endl;
-    cout << "Select an option (1-5): ";
+    cout << "Select an option (1-6): ";
 }
 
 void displayStudentMenu() {
@@ -69,7 +70,16 @@ void displayEnrollmentMenu() {
     cout << "Select an option (1-4): ";
 }
 
-void handleSearchStudent(vector<Student>& students) {
+void displayAttendanceMenu() {
+    cout << "\n====== Attendance Management Menu ======" << endl;
+    cout << "1. Mark Attendance" << endl;
+    cout << "2. View Attendance Report" << endl;
+    cout << "3. Back to Main Menu" << endl;
+    cout << "------------------------------------------" << endl;
+    cout << "Select an option (1-3): ";
+}
+
+void handleSearchStudent(Student students[], int& studentCount) {
     int choice;
     
     while (true) {
@@ -79,10 +89,10 @@ void handleSearchStudent(vector<Student>& students) {
         
         switch (choice) {
             case 1:
-                searchByRoll(students);
+                searchByRoll(students, studentCount);
                 break;
             case 2:
-                searchByName(students);
+                searchByName(students, studentCount);
                 break;
             case 3:
                 cout << "Returning to Student Management Menu..." << endl;
@@ -93,7 +103,7 @@ void handleSearchStudent(vector<Student>& students) {
     }
 }
 
-void handleStudentManagement(vector<Student>& students) {
+void handleStudentManagement(Student students[], int& studentCount) {
     int choice;
     
     while (true) {
@@ -103,19 +113,19 @@ void handleStudentManagement(vector<Student>& students) {
         
         switch (choice) {
             case 1:
-                addStudent(students);
+                addStudent(students, studentCount);
                 break;
             case 2:
-                handleSearchStudent(students);
+                handleSearchStudent(students, studentCount);
                 break;
             case 3:
-                updateStudent(students);
+                updateStudent(students, studentCount);
                 break;
             case 4:
-                softDelete(students);
+                softDelete(students, studentCount);
                 break;
             case 5:
-                listActiveStudents(students);
+                listActiveStudents(students, studentCount);
                 break;
             case 6:
                 cout << "Returning to Main Menu..." << endl;
@@ -126,7 +136,7 @@ void handleStudentManagement(vector<Student>& students) {
     }
 }
 
-void handleCourseManagement(vector<Course>& courses) {
+void handleCourseManagement(Course courses[], int& courseCount) {
     int choice;
     
     while (true) {
@@ -136,13 +146,13 @@ void handleCourseManagement(vector<Course>& courses) {
         
         switch (choice) {
             case 1:
-                addCourse(courses);
+                addCourse(courses, courseCount);
                 break;
             case 2:
-                listCourses(courses);
+                listCourses(courses, courseCount);
                 break;
             case 3:
-                updateCourse(courses);
+                updateCourse(courses, courseCount);
                 break;
             case 4:
                 cout << "Returning to Main Menu..." << endl;
@@ -153,7 +163,7 @@ void handleCourseManagement(vector<Course>& courses) {
     }
 }
 
-void handleReportsMenu(vector<Student>& students) {
+void handleReportsMenu(Student students[], int& studentCount) {
     int choice;
     
     while (true) {
@@ -183,7 +193,7 @@ void handleReportsMenu(vector<Student>& students) {
     }
 }
 
-void handleEnrollmentManagement(vector<Student>& students) {
+void handleEnrollmentManagement(Student students[], int& studentCount) {
     int choice;
     
     while (true) {
@@ -213,9 +223,40 @@ void handleEnrollmentManagement(vector<Student>& students) {
     }
 }
 
+void handleAttendanceManagement(AttendanceRecord attendance[], int& attendanceCount, Student students[], int& studentCount, Course courses[], int& courseCount) {
+    int choice;
+    
+    while (true) {
+        displayAttendanceMenu();
+        cin >> choice;
+        cin.ignore();
+        
+        switch (choice) {
+            case 1:
+                markAttendance(attendance, attendanceCount, students, studentCount, courses, courseCount);
+                break;
+            case 2:
+                viewAttendanceReport(attendance, attendanceCount);
+                break;
+            case 3:
+                cout << "Returning to Main Menu..." << endl;
+                return;
+            default:
+                cout << "Invalid option. Please try again." << endl;
+        }
+    }
+}
+
 int main() {
-    vector<Student> students;
-    vector<Course> courses;
+    const int MAX_RECORDS = 100;
+    Student students[MAX_RECORDS];
+    int studentCount = 0;
+
+    Course courses[MAX_RECORDS];
+    int courseCount = 0;
+
+    AttendanceRecord attendance[MAX_RECORDS];
+    int attendanceCount = 0;
     
     Course mockCourse1;
     mockCourse1.courseCode = "CS-101";
@@ -223,7 +264,10 @@ int main() {
     mockCourse1.creditHours = 4;
     mockCourse1.maxCapacity = 50;
     mockCourse1.currentEnrollment = 0;
-    courses.push_back(mockCourse1);
+    if (courseCount < MAX_RECORDS) {
+        courses[courseCount] = mockCourse1;
+        courseCount++;
+    }
     
     Course mockCourse2;
     mockCourse2.courseCode = "MATH-201";
@@ -231,7 +275,10 @@ int main() {
     mockCourse2.creditHours = 3;
     mockCourse2.maxCapacity = 40;
     mockCourse2.currentEnrollment = 0;
-    courses.push_back(mockCourse2);
+    if (courseCount < MAX_RECORDS) {
+        courses[courseCount] = mockCourse2;
+        courseCount++;
+    }
     
     int mainChoice;
     
@@ -246,23 +293,26 @@ int main() {
         
         switch (mainChoice) {
             case 1:
-                handleStudentManagement(students);
+                handleStudentManagement(students, studentCount);
                 break;
             case 2:
-                handleCourseManagement(courses);
+                handleCourseManagement(courses, courseCount);
                 break;
             case 3:
-                handleReportsMenu(students);
+                handleAttendanceManagement(attendance, attendanceCount, students, studentCount, courses, courseCount);
                 break;
             case 4:
-                handleEnrollmentManagement(students);
+                handleReportsMenu(students, studentCount);
                 break;
             case 5:
+                handleEnrollmentManagement(students, studentCount);
+                break;
+            case 6:
                 cout << "\nThank you for using Campus Analytics Engine!" << endl;
                 cout << "Exiting application..." << endl;
                 return 0;
             default:
-                cout << "Invalid option. Please select 1-5." << endl;
+                cout << "Invalid option. Please select 1-6." << endl;
         }
     }
     

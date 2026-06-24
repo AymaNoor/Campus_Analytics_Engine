@@ -2,7 +2,8 @@
 #define COURSE_OPS_H
 
 #include <string>
-#include <vector>
+
+const int MAX_COURSE_RECORDS = 100;
 
 struct Course {
     std::string courseCode;
@@ -12,11 +13,11 @@ struct Course {
     int currentEnrollment;
 };
 
-void addCourse(std::vector<Course>& courses);
-void listCourses(const std::vector<Course>& courses);
-void updateCourse(std::vector<Course>& courses);
+void addCourse(Course courses[], int& courseCount);
+void listCourses(Course courses[], int& courseCount);
+void updateCourse(Course courses[], int& courseCount);
 bool isValidCourseCode(const std::string& code);
 bool isValidCreditHours(int hours);
-bool courseCodeExists(const std::vector<Course>& courses, const std::string& code);
+bool courseCodeExists(Course courses[], int& courseCount, const std::string& code);
 
 #endif
