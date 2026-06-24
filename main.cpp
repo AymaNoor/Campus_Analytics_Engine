@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include "student_ops.h"
+#include "course_ops.h"
 
 using namespace std;
 
@@ -125,7 +126,7 @@ void handleStudentManagement(vector<Student>& students) {
     }
 }
 
-void handleCourseManagement(vector<Student>& students) {
+void handleCourseManagement(vector<Course>& courses) {
     int choice;
     
     while (true) {
@@ -135,16 +136,13 @@ void handleCourseManagement(vector<Student>& students) {
         
         switch (choice) {
             case 1:
-                cout << "\n--- Add New Course ---" << endl;
-                cout << "[Course Management Feature - Coming Soon]" << endl;
+                addCourse(courses);
                 break;
             case 2:
-                cout << "\n--- View All Courses ---" << endl;
-                cout << "[Course Management Feature - Coming Soon]" << endl;
+                listCourses(courses);
                 break;
             case 3:
-                cout << "\n--- Update Course ---" << endl;
-                cout << "[Course Management Feature - Coming Soon]" << endl;
+                updateCourse(courses);
                 break;
             case 4:
                 cout << "Returning to Main Menu..." << endl;
@@ -217,6 +215,24 @@ void handleEnrollmentManagement(vector<Student>& students) {
 
 int main() {
     vector<Student> students;
+    vector<Course> courses;
+    
+    Course mockCourse1;
+    mockCourse1.courseCode = "CS-101";
+    mockCourse1.courseTitle = "Programming Fundamentals";
+    mockCourse1.creditHours = 4;
+    mockCourse1.maxCapacity = 50;
+    mockCourse1.currentEnrollment = 0;
+    courses.push_back(mockCourse1);
+    
+    Course mockCourse2;
+    mockCourse2.courseCode = "MATH-201";
+    mockCourse2.courseTitle = "Discrete Mathematics";
+    mockCourse2.creditHours = 3;
+    mockCourse2.maxCapacity = 40;
+    mockCourse2.currentEnrollment = 0;
+    courses.push_back(mockCourse2);
+    
     int mainChoice;
     
     cout << "\n=====================================" << endl;
@@ -233,7 +249,7 @@ int main() {
                 handleStudentManagement(students);
                 break;
             case 2:
-                handleCourseManagement(students);
+                handleCourseManagement(courses);
                 break;
             case 3:
                 handleReportsMenu(students);
