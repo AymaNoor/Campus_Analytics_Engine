@@ -4,6 +4,7 @@
 #include "attendance_ops.h"
 #include "grades_ops.h"
 #include "fee_ops.h"
+#include "reports.h"
 
 using namespace std;
 
@@ -56,12 +57,15 @@ void displayCourseMenu() {
 
 void displayReportsMenu() {
     cout << "\n====== Reports & Analytics Menu ======" << endl;
-    cout << "1. Student Performance Report" << endl;
-    cout << "2. Enrollment Statistics" << endl;
-    cout << "3. Course Popularity Report" << endl;
-    cout << "4. Back to Main Menu" << endl;
+    cout << "1. Merit List (Ranked by CGPA)" << endl;
+    cout << "2. Attendance Defaulters List" << endl;
+    cout << "3. Fee Defaulters List" << endl;
+    cout << "4. Semester Result Sheet" << endl;
+    cout << "5. Department Summary" << endl;
+    cout << "6. Export Report to File" << endl;
+    cout << "7. Back to Main Menu" << endl;
     cout << "----------------------------------------" << endl;
-    cout << "Select an option (1-4): ";
+    cout << "Select an option (1-7): ";
 }
 
 void displayEnrollmentMenu() {
@@ -187,7 +191,7 @@ void handleCourseManagement(Course courses[], int& courseCount) {
     }
 }
 
-void handleReportsMenu(Student students[], int& studentCount) {
+void handleReportsMenu(Student students[], int& studentCount, FeeRecord fees[], int& feeCount, GradeRecord grades[], int& gradeCount, AttendanceRecord attendance[], int& attendanceCount) {
     int choice;
     
     while (true) {
@@ -197,18 +201,32 @@ void handleReportsMenu(Student students[], int& studentCount) {
         
         switch (choice) {
             case 1:
-                cout << "\n--- Student Performance Report ---" << endl;
-                cout << "[Reports Feature - Coming Soon]" << endl;
+                printMeritList(students, studentCount);
                 break;
             case 2:
-                cout << "\n--- Enrollment Statistics ---" << endl;
-                cout << "[Reports Feature - Coming Soon]" << endl;
+                printAttendanceDefaulters(students, studentCount, attendance, attendanceCount);
                 break;
             case 3:
-                cout << "\n--- Course Popularity Report ---" << endl;
-                cout << "[Reports Feature - Coming Soon]" << endl;
+                printFeeDefaulters(fees, feeCount, students, studentCount);
                 break;
             case 4:
+                printSemesterResult(students, studentCount, grades, gradeCount, attendance, attendanceCount);
+                break;
+            case 5:
+                printDepartmentSummary(students, studentCount);
+                break;
+            case 6: {
+                int exportChoice;
+                cout << "\nSelect report to export:\n";
+                cout << "1. Merit List\n2. Attendance Defaulters\n3. Fee Defaulters\n";
+                cout << "4. Semester Result\n5. Department Summary\n";
+                cout << "Enter choice (1-5): ";
+                cin >> exportChoice;
+                cin.ignore();
+                exportReportToFile(exportChoice, students, studentCount, fees, feeCount, grades, gradeCount, attendance, attendanceCount);
+                break;
+            }
+            case 7:
                 cout << "Returning to Main Menu..." << endl;
                 return;
             default:
@@ -493,7 +511,7 @@ int main() {
                 handleFeeManagement(fees, feeCount, students, studentCount);
                 break;
             case 6:
-                handleReportsMenu(students, studentCount);
+                handleReportsMenu(students, studentCount, fees, feeCount, grades, gradeCount, attendance, attendanceCount);
                 break;
             case 7:
                 handleEnrollmentManagement(students, studentCount);
