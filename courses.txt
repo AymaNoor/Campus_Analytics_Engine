@@ -6,3 +6,4 @@ CS121,Applied Physics,2,Mr. Asif Nadeem,40,25,NONE
 HU101,Functional English,2,Ms. Rubina Akhtar,40,28,NONE
 IS101,Islamic Studies,2,Mr. Bilal Usman,45,28,NONE
 CS201,Data Structures,3,Dr. Khalid Raza,30,0,CS101
+CS205,Computer Organization and Assembly,2,Sir Tehseen ul Shah,40,0,NONE

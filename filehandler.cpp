@@ -1,13 +1,62 @@
 #include "filehandler.h"
 #include <fstream>
 #include <iostream>
+#include <limits>
 
 using namespace std;
 
+// ===================================================================
+// Safe input helpers — EOF / bad-input protection
+// ===================================================================
+
+// Read an integer from stdin safely.
+// Returns fallback if EOF (Ctrl+Z) or non-numeric input is given.
+int safeReadInt(int fallback) {
+    if (cin.eof()) return fallback;
+    int val;
+    if (!(cin >> val)) {
+        cin.clear();
+        if (cin.eof()) return fallback;
+        // Discard the bad token up to newline
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        return fallback;
+    }
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    return val;
+}
+
+// Read a double from stdin safely.
+// Returns fallback (-999.0 signals "user skipped / bad input").
+double safeReadDouble(double fallback) {
+    if (cin.eof()) return fallback;
+    double val;
+    if (!(cin >> val)) {
+        cin.clear();
+        if (cin.eof()) return fallback;
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        return fallback;
+    }
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    return val;
+}
+
+// Read a full line from stdin safely.
+// Returns empty string on EOF or error.
+string safeReadLine() {
+    if (cin.eof()) return "";
+    string line;
+    if (!getline(cin, line)) {
+        if (!cin.eof()) cin.clear();
+        return "";
+    }
+    return line;
+}
+
+
 // -------------------------------------------------------------------
 // Helper: Parse a single CSV line into fields using a character-by-
-// character loop. Handles double-quoted fields where commas inside
-// quotes are treated as literal characters.
+// character loop. Handles double-quoted fields (commas inside quotes
+// are treated as literal characters).
 // -------------------------------------------------------------------
 static void parseCSVLine(const string& line, vector<string>& fields) {
     fields.clear();
@@ -18,26 +67,21 @@ static void parseCSVLine(const string& line, vector<string>& fields) {
         char ch = line[i];
 
         if (ch == '"') {
-            // Toggle quote state when we see a double-quote
             insideQuotes = !insideQuotes;
         } else if (ch == ',' && !insideQuotes) {
-            // Comma outside quotes ends the current field
             fields.push_back(current);
             current.clear();
         } else {
-            // Regular character or comma inside quotes
             current += ch;
         }
     }
-
-    // Don't forget the last field (after the final comma or end-of-line)
+    // Last field
     fields.push_back(current);
 }
 
 // -------------------------------------------------------------------
 // Helper: Write a single row (vector of fields) to an output stream
-// in CSV format. If a field contains a comma, it is wrapped in double
-// quotes.
+// in CSV format. Fields containing commas are wrapped in double quotes.
 // -------------------------------------------------------------------
 static void writeCSVRow(ofstream& out, const vector<string>& fields) {
     for (size_t i = 0; i < fields.size(); ++i) {
@@ -79,21 +123,21 @@ vector<string> readTXT(const string& filename) {
     bool firstLine = true;
 
     while (getline(inFile, line)) {
-        // Skip empty lines
+        // Strip trailing \r for Windows line endings
+        if (!line.empty() && line[line.size() - 1] == '\r') {
+            line.erase(line.size() - 1);
+        }
         if (line.empty())
             continue;
 
         if (firstLine) {
-            // Skip the header row
             firstLine = false;
-            continue;
+            continue; // skip header
         }
 
-        // Parse the data row into fields
         vector<string> fields;
         parseCSVLine(line, fields);
 
-        // Append all fields to the flat result vector
         for (size_t i = 0; i < fields.size(); ++i) {
             result.push_back(fields[i]);
         }
@@ -105,10 +149,12 @@ vector<string> readTXT(const string& filename) {
 
 // ===================================================================
 // 2. writeTXT — Overwrite file with a header row and data rows.
+//    Accepts vector<vector<string>> — one inner vector per row.
 //    Any field containing a comma is automatically quoted.
 // ===================================================================
-void writeTXT(const string& filename, const string& header,
-              const string rows[][10], int rowCount, int colCount) {
+void writeTXT(const string& filename,
+              const string& header,
+              const vector<vector<string>>& rows) {
     ofstream outFile(filename.c_str());
 
     if (!outFile.is_open()) {
@@ -117,33 +163,10 @@ void writeTXT(const string& filename, const string& header,
         return;
     }
 
-    // Write the header row
     outFile << header << '\n';
 
-    // Write each data row
-    for (int r = 0; r < rowCount; ++r) {
-        for (int c = 0; c < colCount; ++c) {
-            if (c > 0)
-                outFile << ',';
-
-            const string& field = rows[r][c];
-            bool needsQuotes = false;
-
-            // Manual check for comma in the field (no <algorithm>)
-            for (size_t i = 0; i < field.length(); ++i) {
-                if (field[i] == ',') {
-                    needsQuotes = true;
-                    break;
-                }
-            }
-
-            if (needsQuotes) {
-                outFile << '"' << field << '"';
-            } else {
-                outFile << field;
-            }
-        }
-        outFile << '\n';
+    for (size_t r = 0; r < rows.size(); ++r) {
+        writeCSVRow(outFile, rows[r]);
     }
 
     outFile.close();
@@ -188,6 +211,9 @@ vector<string> findRow(const string& filename,
     bool firstLine = true;
 
     while (getline(inFile, line)) {
+        if (!line.empty() && line[line.size() - 1] == '\r') {
+            line.erase(line.size() - 1);
+        }
         if (line.empty())
             continue;
 
@@ -199,7 +225,6 @@ vector<string> findRow(const string& filename,
         vector<string> fields;
         parseCSVLine(line, fields);
 
-        // Check if the requested column exists and matches
         if (colIndex >= 0 && colIndex < (int)fields.size()) {
             if (fields[colIndex] == targetValue) {
                 result = fields;
@@ -210,7 +235,7 @@ vector<string> findRow(const string& filename,
     }
 
     inFile.close();
-    return result;  // empty — no match
+    return result;
 }
 
 // ===================================================================
@@ -232,6 +257,9 @@ bool rowExists(const string& filename,
     bool firstLine = true;
 
     while (getline(inFile, line)) {
+        if (!line.empty() && line[line.size() - 1] == '\r') {
+            line.erase(line.size() - 1);
+        }
         if (line.empty())
             continue;
 
